@@ -84,15 +84,19 @@ app.get("/contact/add", (req, res) => {
 
 app.post("/contact", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
-  const name = req.body.name;
+  const inputName = req.body.name;
   const email = req.body.email;
-  // const duplicated = isDuplicated(name);
+  const findContact = await Contact.find({ name: inputName });
+  let isDuplicated = true;
+  if (!findContact) {
+    isDuplicated = false;
+  }
   const isEmail = validator.isEmail(email);
 
   const errors = [];
-  // if (duplicated) {
-  //   errors.push({ msg: "Contact already exists" });
-  // }
+  if (isDuplicated) {
+    errors.push({ msg: "Contact already exists" });
+  }
 
   if (!isEmail) {
     errors.push({ msg: "Not a valid e-mail address" });
@@ -120,8 +124,6 @@ app.post("/contact", upload.single("img"), async (req, res) => {
 app.get("/contact/:name", async (req, res) => {
   const nameParam = req.params.name;
   const detail = await Contact.find({ name: nameParam });
-  console.log(detail[0].name);
-  // const detail = detailContact(name);
   // if (!detail) {
   //   res.send(404, `${name} Not Found`);
   // }
@@ -133,10 +135,9 @@ app.get("/contact/:name", async (req, res) => {
 });
 
 // form update data
-app.get("/contact/update/:name", (req, res) => {
+app.get("/contact/update/:name", async (req, res) => {
   const name = req.params.name;
-  const contacts = loadContact();
-  const findContact = contacts.find((contact) => contact.name === name);
+  const findContact = await Contact.find({ name: name });
   if (!findContact) {
     res.status(404).send(`${name} Not Found`);
   }
@@ -147,20 +148,23 @@ app.get("/contact/update/:name", (req, res) => {
   });
 });
 
-app.post("/contact/update", upload.single("img"), (req, res) => {
+app.post("/contact/update", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
   const oldName = req.body.oldName;
   const name = req.body.name;
   const email = req.body.email;
-  const duplicated = isDuplicated(name);
+  // const duplicated = isDuplicated(name);
   const isEmail = validator.isEmail(email);
-  const contacts = loadContact();
-  const findContact = contacts.find((contact) => contact.name === oldName);
+  const findContact = await Contact.find({ name: oldName });
 
   const errors = [];
-  if (oldName !== name && duplicated) {
-    // res.status(400).send("Duplicated");
-    errors.push({ msg: "Contact already exists" });
+  if (!findContact) {
+    errors.push({ msg: "Contact not found" });
+  } else if (oldName !== name) {
+    const duplicated = await Contact.findOne({ name: name });
+    if (duplicated) {
+      errors.push({ msg: "Contact already exists" });
+    }
   }
 
   if (!isEmail) {
@@ -177,10 +181,14 @@ app.post("/contact/update", upload.single("img"), (req, res) => {
     });
   }
 
+  delete findContact.oldName;
   // After validation process
   const imagePath = req.file ? "img/" + req.file.filename : findContact.img;
   const contact = { ...req.body, img: imagePath };
-  updateContact(contact);
+  const filter = { name: findContact[0].name };
+
+  await Contact.updateOne(filter, contact);
+
   req.flash("msg", "Contact updated successfully!");
   res.redirect("/contact");
 });

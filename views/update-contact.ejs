@@ -7,7 +7,7 @@
 </div>
 <% } %>
 <form method="post" action="/contact/update" enctype="multipart/form-data">
-  <input type="hidden" name="oldName" value="<%= findContact.name  %>" />
+  <input type="hidden" name="oldName" value="<%= findContact[0].name  %>" />
   <div class="mb-3">
     <label for="inputName" class="form-label">Name</label>
     <input
@@ -16,7 +16,7 @@
       id="inputName"
       name="name"
       placeholder="Ex: Aldrin"
-      value="<%= findContact.name  %>"
+      value="<%= findContact[0].name  %>"
       required
     />
   </div>
@@ -28,7 +28,7 @@
       name="email"
       id="inputEmail"
       placeholder="name@example.com"
-      value="<%= findContact.email  %>"
+      value="<%= findContact[0].email  %>"
       required
     />
   </div>
@@ -38,7 +38,7 @@
   </div>
   <div class="mb-3">
     <img
-      src="../../<%= findContact.img %>"
+      src="../../<%= findContact[0].img %>"
       class="image-selected rounded p-1 border object-fit-cover"
       width="150px"
       height="150px"
