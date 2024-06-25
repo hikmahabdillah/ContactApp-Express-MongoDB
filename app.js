@@ -7,6 +7,9 @@ const validator = require("validator");
 // const { body, validationResult, check } = require("express-validator");
 const port = 3000;
 
+require("./utils/config");
+const Contact = require("./model/contact");
+
 // flash message
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -46,8 +49,8 @@ app.use(
 app.use(flash());
 
 // APPLICATION LEVEL MIDDLEWARE
-app.get("/", (req, res) => {
-  const contacts = loadContact();
+app.get("/", async (req, res) => {
+  const contacts = await Contact.find();
   res.render("index", {
     title: "Home Page",
     contacts,
@@ -62,8 +65,8 @@ app.get("/about", (req, res) => {
   });
 });
 
-app.get("/contact", (req, res) => {
-  const contacts = sortContactByName();
+app.get("/contact", async (req, res) => {
+  const contacts = await Contact.find().sort({ name: 1 });
   res.render("contact", {
     title: "Contact Page",
     contacts,
@@ -108,7 +111,8 @@ app.post("/contact", upload.single("img"), (req, res) => {
   const imagePath = req.file ? req.file.filename : "Default.jpg";
   const contact = { ...req.body, img: "img/" + imagePath };
   console.log(contact);
-  addContact(contact);
+
+  // addContact(contact);
   req.flash("msg", "Contact added successfully!");
   res.redirect("/contact");
 });
