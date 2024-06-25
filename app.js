@@ -12,15 +12,6 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const flash = require("connect-flash");
 
-const {
-  loadContact,
-  detailContact,
-  addContact,
-  isDuplicated,
-  deleteContact,
-  updateContact,
-  sortContactByName,
-} = require("./utils/contacts");
 // ACCESS TO ASSETS FOR PUBLIC
 app.use(express.static("public"));
 
