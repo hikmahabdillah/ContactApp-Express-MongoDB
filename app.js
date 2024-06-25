@@ -86,11 +86,9 @@ app.post("/contact", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
   const inputName = req.body.name;
   const email = req.body.email;
-  const findContact = await Contact.find({ name: inputName });
-  let isDuplicated = true;
-  if (!findContact) {
-    isDuplicated = false;
-  }
+  const findContact = await Contact.find({ name: inputName.toLowerCase() });
+  let isDuplicated = findContact.length > 0;
+
   const isEmail = validator.isEmail(email);
 
   const errors = [];
@@ -160,8 +158,8 @@ app.post("/contact/update", upload.single("img"), async (req, res) => {
   const errors = [];
   if (!findContact) {
     errors.push({ msg: "Contact not found" });
-  } else if (oldName !== name) {
-    const duplicated = await Contact.findOne({ name: name });
+  } else if (oldName.toLowerCase() !== name.toLowerCase()) {
+    const duplicated = await Contact.findOne({ name: name.toLowerCase() });
     if (duplicated) {
       errors.push({ msg: "Contact already exists" });
     }
@@ -183,7 +181,7 @@ app.post("/contact/update", upload.single("img"), async (req, res) => {
 
   delete findContact.oldName;
   // After validation process
-  const imagePath = req.file ? "img/" + req.file.filename : findContact.img;
+  const imagePath = req.file ? "img/" + req.file.filename : findContact[0].img;
   const contact = { ...req.body, img: imagePath };
   const filter = { name: findContact[0].name };
 
@@ -193,14 +191,13 @@ app.post("/contact/update", upload.single("img"), async (req, res) => {
   res.redirect("/contact");
 });
 
-app.get("/contact/delete/:name", (req, res) => {
+app.get("/contact/delete/:name", async (req, res) => {
   const name = req.params.name;
-  const contacts = loadContact();
-  const findContact = contacts.find((contact) => contact.name === name);
+  const findContact = await Contact.find({ name: name });
   if (!findContact) {
     res.status(404).send(`${name} Not Found`);
   }
-  deleteContact(name);
+  await Contact.deleteOne({ name: findContact[0].name });
   req.flash("msg", "Deleted contact successfully!");
   res.redirect("/contact");
 });
