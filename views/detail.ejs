@@ -12,25 +12,27 @@
         <div class="row g-0">
           <div class="col-md-4">
             <img
-              src="../<%= detail.img %>"
+              src="../<%= detail[0].img %>"
               class="card-img-top object-fit-cover rounded"
               height="250px"
-              alt="<%= detail.name %>"
+              alt="<%= detail[0].name %>"
             />
           </div>
           <div class="col-md-8 align-content-center">
             <div class="card-body d-flex flex-column">
-              <h5 class="card-title"><%= detail.name %></h5>
-              <p class="card-subtitle mb-3"><%= detail.email %></p>
+              <h5 class="card-title"><%= detail[0].name %></h5>
+              <p class="card-subtitle mb-3"><%= detail[0].email %></p>
               <div class="d-flex gap-2">
                 <a href="/contact" class="btn btn-primary"
                   >Back to Contact Page</a
                 >
-                <a href="/contact/update/<%= detail.name %>" class="btn btn-warning"
+                <a
+                  href="/contact/update/<%= detail[0].name %>"
+                  class="btn btn-warning"
                   >Update Contact</a
                 >
                 <a
-                  href="/contact/delete/<%= detail.name  %>"
+                  href="/contact/delete/<%= detail[0].name  %>"
                   class="btn btn-danger"
                   onclick="return confirm('are u sure to delete this contact?')"
                   >Delete Contact</a

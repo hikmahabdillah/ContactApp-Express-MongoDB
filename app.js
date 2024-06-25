@@ -82,17 +82,17 @@ app.get("/contact/add", (req, res) => {
   });
 });
 
-app.post("/contact", upload.single("img"), (req, res) => {
+app.post("/contact", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
   const name = req.body.name;
   const email = req.body.email;
-  const duplicated = isDuplicated(name);
+  // const duplicated = isDuplicated(name);
   const isEmail = validator.isEmail(email);
 
   const errors = [];
-  if (duplicated) {
-    errors.push({ msg: "Contact already exists" });
-  }
+  // if (duplicated) {
+  //   errors.push({ msg: "Contact already exists" });
+  // }
 
   if (!isEmail) {
     errors.push({ msg: "Not a valid e-mail address" });
@@ -109,17 +109,19 @@ app.post("/contact", upload.single("img"), (req, res) => {
 
   // After validation process
   const imagePath = req.file ? req.file.filename : "Default.jpg";
-  const contact = { ...req.body, img: "img/" + imagePath };
+  const contact = new Contact({ ...req.body, img: "img/" + imagePath });
   console.log(contact);
-
+  await contact.save();
   // addContact(contact);
   req.flash("msg", "Contact added successfully!");
   res.redirect("/contact");
 });
 
-app.get("/contact/:name", (req, res) => {
-  const name = req.params.name;
-  const detail = detailContact(name);
+app.get("/contact/:name", async (req, res) => {
+  const nameParam = req.params.name;
+  const detail = await Contact.find({ name: nameParam });
+  console.log(detail[0].name);
+  // const detail = detailContact(name);
   // if (!detail) {
   //   res.send(404, `${name} Not Found`);
   // }
