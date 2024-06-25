@@ -1,0 +1,62 @@
+<h3>Form Add Data</h3>
+<% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+<div class="alert alert-danger" role="alert">
+  <% errors.forEach(error => { %>
+  <li><%= error.msg %></li>
+  <% }); %>
+</div>
+<% } %>
+<form method="post" action="/contact" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label for="inputName" class="form-label">Name</label>
+    <input
+      type="text"
+      class="form-control"
+      id="inputName"
+      name="name"
+      placeholder="Ex: Aldrin"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="inputEmail" class="form-label">Email address</label>
+    <input
+      type="email"
+      class="form-control"
+      name="email"
+      id="inputEmail"
+      placeholder="name@example.com"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="formFile" class="form-label">Input File Image</label>
+    <input class="form-control" type="file" id="inputImage" name="img" />
+  </div>
+  <div class="mb-3">
+    <img
+      src="../img/Default.jpg"
+      class="image-selected rounded p-1 border object-fit-cover d-none"
+      width="150px"
+      height="150px"
+      accept=".jpg, .jpeg, .png, .gif"
+      alt=""
+    />
+  </div>
+  <button type="submit" class="btn btn-primary">Add Contact</button>
+</form>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const inputImg = document.querySelector("#inputImage");
+    const imgSelected = document.querySelector(".image-selected");
+    inputImg.addEventListener("change", () => {
+      let reader = new FileReader();
+      reader.onload = () => {
+        imgSelected.classList.remove("d-none");
+        imgSelected.classList.add("d-block");
+        imgSelected.src = reader.result;
+      };
+      reader.readAsDataURL(inputImg.files[0]);
+    });
+  });
+</script>

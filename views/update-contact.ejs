@@ -1,0 +1,63 @@
+<h3>Form Update Data</h3>
+<% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+<div class="alert alert-danger" role="alert">
+  <% errors.forEach(error => { %>
+  <li><%= error.msg %></li>
+  <% }); %>
+</div>
+<% } %>
+<form method="post" action="/contact/update" enctype="multipart/form-data">
+  <input type="hidden" name="oldName" value="<%= findContact.name  %>" />
+  <div class="mb-3">
+    <label for="inputName" class="form-label">Name</label>
+    <input
+      type="text"
+      class="form-control"
+      id="inputName"
+      name="name"
+      placeholder="Ex: Aldrin"
+      value="<%= findContact.name  %>"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="inputEmail" class="form-label">Email address</label>
+    <input
+      type="email"
+      class="form-control"
+      name="email"
+      id="inputEmail"
+      placeholder="name@example.com"
+      value="<%= findContact.email  %>"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="formFile" class="form-label">Input File Image</label>
+    <input class="form-control" type="file" id="inputImage" name="img" />
+  </div>
+  <div class="mb-3">
+    <img
+      src="../../<%= findContact.img %>"
+      class="image-selected rounded p-1 border object-fit-cover"
+      width="150px"
+      height="150px"
+      accept=".jpg, .jpeg, .png, .gif"
+      alt=""
+    />
+  </div>
+  <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const inputImg = document.querySelector("#inputImage");
+    const imgSelected = document.querySelector(".image-selected");
+    inputImg.addEventListener("change", () => {
+      let reader = new FileReader();
+      reader.onload = () => {
+        imgSelected.src = reader.result;
+      };
+      reader.readAsDataURL(inputImg.files[0]);
+    });
+  });
+</script>

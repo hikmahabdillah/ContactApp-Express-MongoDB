@@ -1,0 +1,11 @@
+<h1>Hello World!</h1>
+<h2>Display All Data :</h2>
+<% if (contacts.length !== 0) { %> <% contacts.forEach(element => { %>
+<ul>
+  <li>Name : <%= element.name %></li>
+  <li>Email : <%= element.email %></li>
+  <li>Age : <%= element.age %></li>
+</ul>
+<% }) %> <% } else {%>
+<h3>Data is empty!</h3>
+<% } %>
