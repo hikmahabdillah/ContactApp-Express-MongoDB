@@ -3,7 +3,7 @@
     <div class="col-md-12">
       <h1>Contact List</h1>
       <!-- add data -->
-      <div class="d-flex justify-content-between align-items-center gap-5">
+      <div class="d-flex mb-3 justify-content-between align-items-center gap-5">
         <a href="/add" style="width: 10em" class="btn btn-primary">
           Add Contact
         </a>
@@ -32,6 +32,49 @@
         ></button>
       </div>
       <% } %>
+      <% if(!allNotFavourite){%>
+      <h3>Favourite</h3>
+        <% contacts.forEach(element => {
+          if(element.isFavourite) {%>
+            <div class="d-flex p-2 px-3 flex-row justify-content-between align-items-center gap-3 card border border-2 border-primary-subtle mb-3">
+              <div class="d-flex gap-3 align-items-center">
+                <img
+                  src="<%= element.img %>"
+                  class="rounded max-h-25 object-fit-cover"
+                  width="60px"
+                  height="60px"
+                  alt=""
+                />
+              <h5 class="mb-0"><%= element.name %></h5>
+                </div>
+              
+                <div class="d-flex align-items-center gap-2">
+                  <form action="/favourite/<%= element.name %>" method="post" id="favouriteForm-<%= element.name %>">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="isFavourite"
+                        id="favourite-<%= element.name %>"
+                        onchange="document.getElementById('favouriteForm-<%= element.name %>').submit();"
+                        <%= element.isFavourite ? 'checked' : '' %>
+                      />
+                      <label class="form-check-label" for="favourite-<%= element.name %>">Favourite</label>
+                    </div>
+                    </form>
+                    <a href="/<%=element.name%>" class="btn btn-success"
+                    ><i class="bi bi-info-circle me-2"></i>detail</a
+                  >
+                    </div>    
+              </div>
+            
+      <%}});%>
+        <% } %>
+        <% if (contacts.length === 0) {%>
+            
+              <h6 class="text-center text-danger">Data Is Empty</h6>
+            
+            <%} else{%> 
       <div
         class="table-responsive mt-3"
         style="height: 400px; overflow-y: auto"
@@ -48,13 +91,11 @@
             </tr>
           </thead>
           <tbody>
-            <% if (contacts.length === 0) {%>
+           <% let index = 0;
+             contacts.forEach((element) => { 
+               if(element.isFavourite === false){%>
             <tr>
-              <td colspan="5" class="text-center text-danger">Data Is Empty</td>
-            </tr>
-            <%} %> <% contacts.forEach((element, index) => { %>
-            <tr>
-              <th scope="row"><%= (index +1) %></th>
+              <th scope="row"><%= (++index) %></th>
               <td>
                 <img
                   src="<%= element.img %>"
@@ -68,15 +109,31 @@
               <td><%= element.num %></td>
               <td><%= element.email %></td>
               <td>
-                <a href="/<%=element.name%>" class="btn btn-success"
-                  ><i class="bi bi-info-circle me-2"></i>detail</a
-                >
+                <div class="d-flex gap-2">
+                  <form action="/favourite/<%= element.name %>" method="post" id="favouriteForm-<%= element.name %>">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="isFavourite"
+                        id="favourite-<%= element.name %>"
+                        onchange="document.getElementById('favouriteForm-<%= element.name %>').submit();"
+                        <%= element.isFavourite ? 'checked' : '' %>
+                      />
+                      <label class="form-check-label" for="favourite-<%= element.name %>">Favourite</label>
+                    </div>
+                  </form>
+                  <a href="/<%=element.name%>" class="btn btn-success"
+                    ><i class="bi bi-info-circle me-2"></i>detail</a
+                  >
+                </div>
               </td>
             </tr>
-            <% });%>
+            <% }});%>
           </tbody>
         </table>
       </div>
+      <%}%> 
     </div>
   </div>
 </div>

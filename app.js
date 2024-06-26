@@ -95,9 +95,12 @@ app.get("/", async (req, res) => {
   if (searchResults.length > 0) {
     contacts = JSON.parse(searchResults[0]);
   }
+  const allNotFavourite = contacts.every((contact) => !contact.isFavourite);
   res.render("index", {
     title: "Contact Page",
     contacts,
+    allNotFavourite,
+    searchResults,
     msg: req.flash("msg"),
     layout: "layouts/mainlayouts.ejs",
   });
@@ -133,6 +136,34 @@ app.post("/search", async (req, res) => {
   }
 
   req.flash("searchResults", JSON.stringify(contacts));
+
+  res.redirect("/");
+});
+
+// add to favourite feature
+app.post("/favourite/:name", async (req, res) => {
+  // MANUAL VALIDATOR
+  const inputName = req.params.name;
+  const isFavourite = req.body.isFavourite === "on";
+  let contacts = await findByName(inputName);
+  console.log(contacts);
+  const errors = [];
+  if (contacts == undefined) {
+    errors.push({ msg: `${inputName} not found!` });
+  }
+
+  // Jika terdapat error, render kembali halaman dengan pesan kesalahan
+  if (errors.length > 0) {
+    return res.render("index", {
+      title: "Contact Page",
+      layout: "layouts/mainlayouts.ejs",
+      errors: errors,
+    });
+  }
+
+  const filter = { name: contacts[0].name };
+
+  await Contact.updateOne(filter, { isFavourite: isFavourite });
 
   res.redirect("/");
 });
