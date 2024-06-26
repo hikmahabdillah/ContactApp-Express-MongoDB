@@ -49,25 +49,25 @@ app.use(
 app.use(flash());
 
 // APPLICATION LEVEL MIDDLEWARE
+const sortByName = async () => {
+  try {
+    // Ambil semua kontak
+    const contacts = await Contact.find();
+
+    // Sortir berdasarkan nama (dalam bentuk lowercase)
+    contacts.sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+
+    return contacts;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 app.get("/", async (req, res) => {
-  const contacts = await Contact.find();
+  const contacts = await sortByName();
   res.render("index", {
-    title: "Home Page",
-    contacts,
-    layout: "layouts/mainlayouts.ejs",
-  });
-});
-
-app.get("/about", (req, res) => {
-  res.render("about", {
-    title: "About Page",
-    layout: "layouts/mainlayouts.ejs",
-  });
-});
-
-app.get("/contact", async (req, res) => {
-  const contacts = await Contact.find().sort({ name: 1 });
-  res.render("contact", {
     title: "Contact Page",
     contacts,
     msg: req.flash("msg"),
@@ -75,14 +75,14 @@ app.get("/contact", async (req, res) => {
   });
 });
 
-app.get("/contact/add", (req, res) => {
+app.get("/add", (req, res) => {
   res.render("add-contacts", {
     title: "Add Contact Page",
     layout: "layouts/mainlayouts.ejs",
   });
 });
 
-app.post("/contact", upload.single("img"), async (req, res) => {
+app.post("/", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
   const inputName = req.body.name;
   const email = req.body.email;
@@ -116,10 +116,10 @@ app.post("/contact", upload.single("img"), async (req, res) => {
   await contact.save();
   // addContact(contact);
   req.flash("msg", "Contact added successfully!");
-  res.redirect("/contact");
+  res.redirect("/");
 });
 
-app.get("/contact/:name", async (req, res) => {
+app.get("/:name", async (req, res) => {
   const nameParam = req.params.name;
   const detail = await Contact.find({ name: nameParam });
   // if (!detail) {
@@ -133,7 +133,7 @@ app.get("/contact/:name", async (req, res) => {
 });
 
 // form update data
-app.get("/contact/update/:name", async (req, res) => {
+app.get("/update/:name", async (req, res) => {
   const name = req.params.name;
   const findContact = await Contact.find({ name: name });
   if (!findContact) {
@@ -146,7 +146,7 @@ app.get("/contact/update/:name", async (req, res) => {
   });
 });
 
-app.post("/contact/update", upload.single("img"), async (req, res) => {
+app.post("/update", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
   const oldName = req.body.oldName;
   const name = req.body.name;
@@ -188,18 +188,18 @@ app.post("/contact/update", upload.single("img"), async (req, res) => {
   await Contact.updateOne(filter, contact);
 
   req.flash("msg", "Contact updated successfully!");
-  res.redirect("/contact");
+  res.redirect("/");
 });
 
-app.get("/contact/delete/:name", async (req, res) => {
+app.get("/delete/:name", async (req, res) => {
   const name = req.params.name;
   const findContact = await Contact.find({ name: name });
   if (!findContact) {
-    res.status(404).send(`${name} Not Found`);
+    res.status(n404).send(`${name} Not Found`);
   }
   await Contact.deleteOne({ name: findContact[0].name });
   req.flash("msg", "Deleted contact successfully!");
-  res.redirect("/contact");
+  res.redirect("/");
 });
 
 // for request anything

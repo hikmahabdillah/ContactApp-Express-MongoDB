@@ -5,7 +5,7 @@
       <% if(!detail) { %>
       <div class="alert alert-warning" role="alert">
         Data Not Found!
-        <a href="/contact" class="alert-link">Back to Contact Page</a>
+        <a href="/" class="alert-link">Back to Contact Page</a>
       </div>
       <% } else { %>
       <div class="card" style="width: 740px">
@@ -23,16 +23,12 @@
               <h5 class="card-title"><%= detail[0].name %></h5>
               <p class="card-subtitle mb-3"><%= detail[0].email %></p>
               <div class="d-flex gap-2">
-                <a href="/contact" class="btn btn-primary"
-                  >Back to Contact Page</a
-                >
-                <a
-                  href="/contact/update/<%= detail[0].name %>"
-                  class="btn btn-warning"
+                <a href="/" class="btn btn-primary">Back to Contact Page</a>
+                <a href="/update/<%= detail[0].name %>" class="btn btn-warning"
                   >Update Contact</a
                 >
                 <a
-                  href="/contact/delete/<%= detail[0].name  %>"
+                  href="/delete/<%= detail[0].name  %>"
                   class="btn btn-danger"
                   onclick="return confirm('are u sure to delete this contact?')"
                   >Delete Contact</a

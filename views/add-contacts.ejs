@@ -1,12 +1,18 @@
 <h3>Form Add Data</h3>
 <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
-<div class="alert alert-danger" role="alert">
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
   <% errors.forEach(error => { %>
   <li><%= error.msg %></li>
   <% }); %>
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
 </div>
 <% } %>
-<form method="post" action="/contact" enctype="multipart/form-data">
+<form method="post" action="/" enctype="multipart/form-data">
   <div class="mb-3">
     <label for="inputName" class="form-label">Name</label>
     <input

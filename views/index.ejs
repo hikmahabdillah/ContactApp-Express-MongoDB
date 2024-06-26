@@ -1,10 +1,60 @@
-<h1>Hello World!</h1>
-<h2>Display All Data :</h2>
-<% if (contacts.length !== 0) { %> <% contacts.forEach(element => { %>
-<ul>
-  <li>Name : <%= element.name %></li>
-  <li>Email : <%= element.email %></li>
-</ul>
-<% }) %> <% } else {%>
-<h3>Data is empty!</h3>
-<% } %>
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h1>Contact List</h1>
+      <!-- add data -->
+      <a href="/add" class="btn btn-primary mb-3"> Add Contact </a>
+      <% if(typeof msg !== 'undefined' && msg.length > 0) {%>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= msg %>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      <% } %>
+      <div class="table-responsive" style="height: 400px; overflow-y: auto">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Profile</th>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (contacts.length === 0) {%>
+            <tr>
+              <td colspan="5" class="text-center text-danger">Data Is Empty</td>
+            </tr>
+            <%} %> <% contacts.forEach((element, index) => { %>
+            <tr>
+              <th scope="row"><%= (index +1) %></th>
+              <td>
+                <img
+                  src="<%= element.img %>"
+                  class="rounded max-h-25 object-fit-cover"
+                  width="50px"
+                  height="50px"
+                  alt=""
+                />
+              </td>
+              <td><%= element.name %></td>
+              <td><%= element.email %></td>
+              <td>
+                <a href="/<%=element.name%>" class="btn btn-success"
+                  ><i class="bi bi-info-circle me-2"></i>detail</a
+                >
+              </td>
+            </tr>
+            <% });%>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
