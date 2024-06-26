@@ -52,10 +52,9 @@ app.use(flash());
 // APPLICATION LEVEL MIDDLEWARE
 const sortByName = async () => {
   try {
-    // Ambil semua kontak
     const contacts = await Contact.find();
 
-    // Sortir berdasarkan nama (dalam bentuk lowercase)
+    // Sort by nama (in lowercase)
     contacts.sort((a, b) =>
       a.name.toLowerCase().localeCompare(b.name.toLowerCase())
     );
@@ -69,6 +68,7 @@ const sortByName = async () => {
 const searchByName = async (nameToSearch) => {
   try {
     // searching case-insensitive
+    // FOR WORDS THAT HAVE SIMILARITIES
     const regex = new RegExp(nameToSearch, "i");
     const contacts = await Contact.find({ name: regex });
     return contacts;
@@ -80,6 +80,7 @@ const searchByName = async (nameToSearch) => {
 const findByName = async (nameToSearch) => {
   try {
     // find contact case-insensitive
+    // FOR SPESIFIC STRING
     const regex = new RegExp(`\\b${nameToSearch}\\b`, "i");
     const contacts = await Contact.find({ name: regex });
     return contacts;
@@ -139,14 +140,20 @@ app.post("/", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
   const inputName = req.body.name;
   const email = req.body.email;
+  const num = req.body.num;
   const findContact = await findByName(inputName);
-  let isDuplicated = findContact.length > 0;
 
+  const isDuplicated = findContact.length > 0;
   const isEmail = validator.isEmail(email);
+  const isNum = validator.isMobilePhone(num);
 
   const errors = [];
   if (isDuplicated) {
     errors.push({ msg: "Contact already exists" });
+  }
+
+  if (!isNum) {
+    errors.push({ msg: "Not a valid phone num" });
   }
 
   if (!isEmail) {
@@ -205,8 +212,11 @@ app.post("/update", upload.single("img"), async (req, res) => {
   const oldName = req.body.oldName;
   const name = req.body.name;
   const email = req.body.email;
+  const num = req.body.num;
   // const duplicated = isDuplicated(name);
   const isEmail = validator.isEmail(email);
+  const isNum = validator.isMobilePhone(num);
+
   const findContact = await findByName(oldName);
   const errors = [];
   if (!findContact) {
@@ -218,6 +228,9 @@ app.post("/update", upload.single("img"), async (req, res) => {
     }
   }
 
+  if (!isNum) {
+    errors.push({ msg: "Not a valid Phone Num" });
+  }
   if (!isEmail) {
     errors.push({ msg: "Not a valid e-mail address" });
   }
