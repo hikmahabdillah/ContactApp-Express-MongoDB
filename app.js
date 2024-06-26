@@ -7,6 +7,7 @@ const validator = require("validator");
 // const { body, validationResult, check } = require("express-validator");
 const port = 3000;
 
+// Connection to database
 require("./utils/config");
 const Contact = require("./model/contact");
 
@@ -65,8 +66,22 @@ const sortByName = async () => {
   }
 };
 
+const findByName = async (nameToSearch) => {
+  try {
+    // searching case-insensitive
+    const regex = new RegExp(nameToSearch, "i");
+    const contacts = await Contact.find({ name: regex });
+    return contacts;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 app.get("/", async (req, res) => {
-  const contacts = await sortByName();
+  let contacts = await sortByName();
+  if (req.session.contact) {
+    contacts = req.session.contact;
+  }
   res.render("index", {
     title: "Contact Page",
     contacts,
@@ -82,11 +97,38 @@ app.get("/add", (req, res) => {
   });
 });
 
+app.post("/search", async (req, res) => {
+  // MANUAL VALIDATOR
+  const inputName = req.body.search;
+  let contacts = await findByName(inputName);
+  console.log(contacts);
+  const errors = [];
+  if (contacts == undefined) {
+    errors.push({ msg: `${inputName} not found!` });
+  }
+  if (inputName === "") {
+    contacts = await sortByName();
+  }
+
+  // Jika terdapat error, render kembali halaman dengan pesan kesalahan
+  if (errors.length > 0) {
+    return res.render("index", {
+      title: "Contact Page",
+      layout: "layouts/mainlayouts.ejs",
+      errors: errors,
+    });
+  }
+
+  req.session.contact = contacts;
+
+  res.redirect("/");
+});
+
 app.post("/", upload.single("img"), async (req, res) => {
   // MANUAL VALIDATOR
   const inputName = req.body.name;
   const email = req.body.email;
-  const findContact = await Contact.find({ name: inputName.toLowerCase() });
+  const findContact = await findByName(inputName);
   let isDuplicated = findContact.length > 0;
 
   const isEmail = validator.isEmail(email);
@@ -122,9 +164,10 @@ app.post("/", upload.single("img"), async (req, res) => {
 app.get("/:name", async (req, res) => {
   const nameParam = req.params.name;
   const detail = await Contact.find({ name: nameParam });
-  // if (!detail) {
-  //   res.send(404, `${name} Not Found`);
-  // }
+  console.log(detail);
+  if (detail.length === 0) {
+    res.send(404, `${nameParam} Not Found`);
+  }
   res.render("detail", {
     title: "Detail Page",
     detail,
@@ -136,7 +179,7 @@ app.get("/:name", async (req, res) => {
 app.get("/update/:name", async (req, res) => {
   const name = req.params.name;
   const findContact = await Contact.find({ name: name });
-  if (!findContact) {
+  if (findContact.length === 0) {
     res.status(404).send(`${name} Not Found`);
   }
   res.render("update-contact", {
@@ -153,13 +196,13 @@ app.post("/update", upload.single("img"), async (req, res) => {
   const email = req.body.email;
   // const duplicated = isDuplicated(name);
   const isEmail = validator.isEmail(email);
-  const findContact = await Contact.find({ name: oldName });
+  const findContact = await findByName(oldName);
 
   const errors = [];
   if (!findContact) {
     errors.push({ msg: "Contact not found" });
   } else if (oldName.toLowerCase() !== name.toLowerCase()) {
-    const duplicated = await Contact.findOne({ name: name.toLowerCase() });
+    const duplicated = await findByName(name);
     if (duplicated) {
       errors.push({ msg: "Contact already exists" });
     }
