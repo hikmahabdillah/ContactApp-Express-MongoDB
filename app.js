@@ -66,10 +66,21 @@ const sortByName = async () => {
   }
 };
 
-const findByName = async (nameToSearch) => {
+const searchByName = async (nameToSearch) => {
   try {
     // searching case-insensitive
     const regex = new RegExp(nameToSearch, "i");
+    const contacts = await Contact.find({ name: regex });
+    return contacts;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const findByName = async (nameToSearch) => {
+  try {
+    // find contact case-insensitive
+    const regex = new RegExp(`\\b${nameToSearch}\\b`, "i");
     const contacts = await Contact.find({ name: regex });
     return contacts;
   } catch (err) {
@@ -100,7 +111,7 @@ app.get("/add", (req, res) => {
 app.post("/search", async (req, res) => {
   // MANUAL VALIDATOR
   const inputName = req.body.search;
-  let contacts = await findByName(inputName);
+  let contacts = await searchByName(inputName);
   console.log(contacts);
   const errors = [];
   if (contacts == undefined) {
@@ -197,13 +208,12 @@ app.post("/update", upload.single("img"), async (req, res) => {
   // const duplicated = isDuplicated(name);
   const isEmail = validator.isEmail(email);
   const findContact = await findByName(oldName);
-
   const errors = [];
   if (!findContact) {
     errors.push({ msg: "Contact not found" });
   } else if (oldName.toLowerCase() !== name.toLowerCase()) {
     const duplicated = await findByName(name);
-    if (duplicated) {
+    if (duplicated.length > 0) {
       errors.push({ msg: "Contact already exists" });
     }
   }
