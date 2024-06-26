@@ -91,8 +91,9 @@ const findByName = async (nameToSearch) => {
 
 app.get("/", async (req, res) => {
   let contacts = await sortByName();
-  if (req.session.contact) {
-    contacts = req.session.contact;
+  const searchResults = req.flash("searchResults");
+  if (searchResults.length > 0) {
+    contacts = JSON.parse(searchResults[0]);
   }
   res.render("index", {
     title: "Contact Page",
@@ -131,7 +132,7 @@ app.post("/search", async (req, res) => {
     });
   }
 
-  req.session.contact = contacts;
+  req.flash("searchResults", JSON.stringify(contacts));
 
   res.redirect("/");
 });
@@ -261,7 +262,7 @@ app.get("/delete/:name", async (req, res) => {
   const name = req.params.name;
   const findContact = await Contact.find({ name: name });
   if (!findContact) {
-    res.status(n404).send(`${name} Not Found`);
+    res.status(404).send(`${name} Not Found`);
   }
   await Contact.deleteOne({ name: findContact[0].name });
   req.flash("msg", "Deleted contact successfully!");
