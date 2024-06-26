@@ -70,11 +70,9 @@
             
       <%}});%>
         <% } %>
-        <% if (contacts.length === 0) {%>
-            
+        <% if (contacts.length === 0) {%>      
               <h6 class="text-center text-danger">Data Is Empty</h6>
-            
-            <%} else{%> 
+        <%} else{%> 
       <div
         class="table-responsive mt-3"
         style="height: 400px; overflow-y: auto"
@@ -85,8 +83,6 @@
               <th scope="col">#</th>
               <th scope="col">Profile</th>
               <th scope="col">Name</th>
-              <th scope="col">PhoneNum</th>
-              <th scope="col">Email</th>
               <th scope="col">Action</th>
             </tr>
           </thead>
@@ -106,8 +102,6 @@
                 />
               </td>
               <td><%= element.name %></td>
-              <td><%= element.num %></td>
-              <td><%= element.email %></td>
               <td>
                 <div class="d-flex gap-2">
                   <form action="/favourite/<%= element.name %>" method="post" id="favouriteForm-<%= element.name %>">
