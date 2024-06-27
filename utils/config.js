@@ -1,14 +1,21 @@
 const mongoose = require("mongoose");
+const mongoUri = process.env.MONGO_URI;
 
 mongoose
-  .connect(
-    "mongodb+srv://hikmahaldrin:hikmah44@cluster0.rvtbfub.mongodb.net/ald?retryWrites=true&w=majority&appName=Cluster0",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
-  .then(() => console.log("Connected!"));
+  .connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("MongoDB connected");
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
+  });
 
 // new Contact
 // const contact1 = new Contact({

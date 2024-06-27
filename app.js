@@ -5,7 +5,7 @@ const multer = require("multer");
 const expressLayouts = require("express-ejs-layouts");
 const validator = require("validator");
 // const { body, validationResult, check } = require("express-validator");
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Connection to database
 require("./utils/config");
@@ -15,6 +15,16 @@ const Contact = require("./model/contact");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const flash = require("connect-flash");
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
 
 // ACCESS TO ASSETS FOR PUBLIC
 app.use(express.static("public"));
