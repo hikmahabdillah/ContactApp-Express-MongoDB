@@ -1,10 +1,11 @@
 // build server
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const multer = require("multer");
 const expressLayouts = require("express-ejs-layouts");
 const validator = require("validator");
-// const { body, validationResult, check } = require("express-validator");
+// const mongoose = require("mongoose");
 const port = process.env.PORT || 3000;
 
 // Connection to database
@@ -15,6 +16,7 @@ const Contact = require("./model/contact");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const flash = require("connect-flash");
+const MongoStore = require("connect-mongo");
 
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
@@ -53,8 +55,11 @@ app.use(
   session({
     cookie: { maxAge: 60000 },
     secret: "secret",
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+    }),
   })
 );
 app.use(flash());
@@ -241,7 +246,7 @@ app.get("/:name", async (req, res) => {
   const detail = await Contact.find({ name: nameParam });
   console.log(detail);
   if (detail.length === 0) {
-    res.send(404, `${nameParam} Not Found`);
+    res.status(404).send(`${nameParam} Not Found`);
   }
   res.render("detail", {
     title: "Detail Page",
