@@ -50,6 +50,16 @@ app.use(
 app.use(flash());
 
 // APPLICATION LEVEL MIDDLEWARE
+const convertPhoneNum = async (number) => {
+  // Pastikan nomor dimulai dengan "08"
+  if (number.startsWith("08")) {
+    // Ganti "08" dengan "+62"
+    return "+62" + number.slice(1);
+  }
+  // Jika format tidak sesuai, bisa ditambahkan penanganan kesalahan di sini
+  return number;
+};
+
 const sortByName = async () => {
   try {
     const contacts = await Contact.find();
@@ -178,6 +188,7 @@ app.post("/", upload.single("img"), async (req, res) => {
   const isDuplicated = findContact.length > 0;
   const isEmail = validator.isEmail(email);
   const isNum = validator.isMobilePhone(num);
+  const phoneNum = await convertPhoneNum(num);
 
   const errors = [];
   if (isDuplicated) {
@@ -203,7 +214,11 @@ app.post("/", upload.single("img"), async (req, res) => {
 
   // After validation process
   const imagePath = req.file ? req.file.filename : "Default.jpg";
-  const contact = new Contact({ ...req.body, img: "img/" + imagePath });
+  const contact = new Contact({
+    ...req.body,
+    num: phoneNum,
+    img: "img/" + imagePath,
+  });
   console.log(contact);
   await contact.save();
   // addContact(contact);
@@ -248,6 +263,7 @@ app.post("/update", upload.single("img"), async (req, res) => {
   // const duplicated = isDuplicated(name);
   const isEmail = validator.isEmail(email);
   const isNum = validator.isMobilePhone(num);
+  const phoneNum = await convertPhoneNum(num);
 
   const findContact = await findByName(oldName);
   const errors = [];
@@ -280,7 +296,7 @@ app.post("/update", upload.single("img"), async (req, res) => {
   delete findContact.oldName;
   // After validation process
   const imagePath = req.file ? "img/" + req.file.filename : findContact[0].img;
-  const contact = { ...req.body, img: imagePath };
+  const contact = { ...req.body, num: phoneNum, img: imagePath };
   const filter = { name: findContact[0].name };
 
   await Contact.updateOne(filter, contact);
