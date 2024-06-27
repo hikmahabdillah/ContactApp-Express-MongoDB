@@ -34,41 +34,44 @@
       <% } %>
       <% if(!allNotFavourite){%>
       <h3>Favourite</h3>
+      <p>Note: to unfavourite contact, click the star-fill</p>
+
+      <div class="card-scroll w-100" style=" overflow-x: auto;" >
+      <div class="d-flex flex-row flex-nowrap w-100 gap-3">
         <% contacts.forEach(element => {
           if(element.isFavourite) {%>
-            <div class="d-flex p-2 px-3 flex-row justify-content-between align-items-center gap-3 card border border-2 border-primary-subtle mb-3">
-              <div class="d-flex gap-3 align-items-center">
-                <img
+            <a style="text-decoration: none;" href="/<%=element.name%>">
+              <div style="width: 110px;" class="d-flex position-relative flex-shrink-0 p-2 px-3 flex-column justify-content-between align-items-center card border-0">
+                <div class="d-flex flex-column gap-2 align-items-center mt-2">
+                  <form action="/favourite/<%= element.name %>" method="post" style="height: 0" id="favouriteForm-<%= element.name %>">
+                      <div class="form-check ps-0">
+                        <input
+                          class="form-check-input d-none"
+                          type="checkbox"
+                          name="isFavourite"
+                          id="favourite-<%= element.name %>"
+                          onchange="document.getElementById('favouriteForm-<%= element.name %>').submit();"
+                          <%= element.isFavourite ? 'checked' : '' %>
+                          />
+                          <label style="right: 10px; top:5px" class="form-check-label z-3 position-absolute" for="favourite-<%= element.name %>">
+                            <%- element.isFavourite ? '<i style="font-size: 1.9em; color:#F6BE30"  class="bi bi-star-fill"></i>' : '<i style="font-size: 1.9em;"  class="bi bi-star"></i>' %>
+                            </label>
+                        </div>
+                  </form>
+                  <img
                   src="<%= element.img %>"
-                  class="rounded max-h-25 object-fit-cover"
-                  width="60px"
-                  height="60px"
+                  class="rounded-circle max-h-25 object-fit-cover"
+                  width="80px"
+                  height="80px"
                   alt=""
                 />
               <h5 class="mb-0"><%= element.name %></h5>
                 </div>
-              
-                <div class="d-flex align-items-center gap-2">
-                  <form action="/favourite/<%= element.name %>" method="post" id="favouriteForm-<%= element.name %>">
-                    <div class="form-check">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="isFavourite"
-                        id="favourite-<%= element.name %>"
-                        onchange="document.getElementById('favouriteForm-<%= element.name %>').submit();"
-                        <%= element.isFavourite ? 'checked' : '' %>
-                      />
-                      <label class="form-check-label" for="favourite-<%= element.name %>">Favourite</label>
-                    </div>
-                    </form>
-                    <a href="/<%=element.name%>" class="btn btn-success"
-                    ><i class="bi bi-info-circle me-2"></i>detail</a
-                  >
-                    </div>    
-              </div>
-            
-      <%}});%>
+               </div>
+              </a>
+            <%}});%>
+            </div>
+          </div>
         <% } %>
         <% if (contacts.length === 0) {%>      
               <h6 class="text-center text-danger">Data Is Empty</h6>
@@ -107,6 +110,7 @@
                   <form action="/favourite/<%= element.name %>" method="post" id="favouriteForm-<%= element.name %>">
                     <div class="form-check">
                       <input
+                        hidden
                         class="form-check-input"
                         type="checkbox"
                         name="isFavourite"
@@ -114,11 +118,11 @@
                         onchange="document.getElementById('favouriteForm-<%= element.name %>').submit();"
                         <%= element.isFavourite ? 'checked' : '' %>
                       />
-                      <label class="form-check-label" for="favourite-<%= element.name %>">Favourite</label>
+                      <label class="form-check-label" for="favourite-<%= element.name %>"><i style="font-size: 1.5em;" class=" bi bi-star "></i></label>
                     </div>
                   </form>
-                  <a href="/<%=element.name%>" class="btn btn-success"
-                    ><i class="bi bi-info-circle me-2"></i>detail</a
+                  <a href="/<%=element.name%>"
+                    ><i style="font-size: 1.5em; color: #0f0f0fdd;"  class="bi bi-info-circle"></i></a
                   >
                 </div>
               </td>
