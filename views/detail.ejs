@@ -1,14 +1,17 @@
 <div class="container">
   <div class="row">
     <div class="col-md-10">
-      <h3>Detail Contact</h3>
+      <a href="/">
+        <i style="font-size: 1.7em; color: rgb(19, 19, 19);" class="bi bi-arrow-left"></i>
+      </a>
+      <h3 class="mt-5 mb-3">Detail Contact</h3>
       <% if(detail.length === 0) { %>
       <div class="alert alert-warning" role="alert">
         Data Not Found!
         <a href="/" class="alert-link">Back to Contact Page</a>
       </div>
       <% } else { %>
-      <div class="card" style="width:100%; max-width: 25em">
+      <div class="card mb-5" style="width:100%; max-width: 25em">
         <div class="head-card position-relative">
           <form
             action="/favourite/<%= detail[0].name %>"
@@ -69,7 +72,7 @@
           </div>
           <div class="my-3 d-flex gap-2 justify-content-center">
             <a href="/update/<%= detail[0].name %>" class="btn btn-warning d-flex align-items-center gap-2">
-              <i  style="font-size: 1.4em;" class="bi bi-pencil"></i>
+              <i style="font-size: 1.4em;" class="bi bi-pencil"></i>
               <span class="d-md-inline">Update</span>
             </a>
             <a

@@ -1,4 +1,7 @@
-<h3>Form Update Data</h3>
+<a href="/<%= findContact[0].name  %>">
+  <i style="font-size: 1.7em; color: rgb(19, 19, 19);" class="bi bi-arrow-left"></i>
+</a>
+<h3 class="mt-5 mb-3">Form Update Data</h3>
 <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
 <div class="alert alert-danger alert-dismissible fade show" role="alert">
   <% errors.forEach(error => { %>
