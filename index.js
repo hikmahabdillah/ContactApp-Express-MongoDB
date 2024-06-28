@@ -264,7 +264,9 @@ app.post("/update", upload.single("img"), async (req, res, next) => {
       });
     }
 
-    const imagePath = req.file ? "img/" + req.file.filename : findContact[0].img;
+    const imagePath = req.file
+      ? "img/" + req.file.filename
+      : findContact[0].img;
     const contact = { ...req.body, num: phoneNum, img: imagePath };
     await Contact.updateOne({ name: findContact[0].name }, contact);
     req.flash("msg", "Contact updated successfully!");
