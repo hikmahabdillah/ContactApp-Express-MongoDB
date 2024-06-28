@@ -5,7 +5,6 @@ const app = express();
 const multer = require("multer");
 const expressLayouts = require("express-ejs-layouts");
 const validator = require("validator");
-// const mongoose = require("mongoose");
 const port = process.env.PORT || 3000;
 
 // Connection to database
@@ -18,10 +17,12 @@ const cookieParser = require("cookie-parser");
 const flash = require("connect-flash");
 const MongoStore = require("connect-mongo");
 
+// Middleware for logging requests
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -32,11 +33,11 @@ app.use((err, req, res, next) => {
 app.use(express.static("public"));
 
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/img/"); // Lokasi penyimpanan file di server
+  destination: (req, file, cb) => {
+    cb(null, "public/img/");
   },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname); // Menyimpan dengan nama asli
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
   },
 });
 const upload = multer({ storage: storage });
@@ -46,7 +47,6 @@ app.set("views", "./views");
 app.set("view engine", "ejs");
 
 app.use(expressLayouts);
-
 app.use(express.urlencoded({ extended: true }));
 
 // configuration flash
@@ -66,69 +66,61 @@ app.use(flash());
 
 // APPLICATION LEVEL MIDDLEWARE
 const convertPhoneNum = async (number) => {
-  // Pastikan nomor dimulai dengan "08"
   if (number.startsWith("08")) {
-    // Ganti "08" dengan "+62"
     return "+62" + number.slice(1);
   }
-  // Jika format tidak sesuai, bisa ditambahkan penanganan kesalahan di sini
   return number;
 };
 
 const sortByName = async () => {
   try {
-    const contacts = await Contact.find();
-
-    // Sort by nama (in lowercase)
-    contacts.sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-    );
-
+    const contacts = await Contact.find().sort({ name: 1 });
     return contacts;
   } catch (err) {
-    console.error(err);
+    throw new Error("Failed to fetch contacts");
   }
 };
 
 const searchByName = async (nameToSearch) => {
   try {
-    // searching case-insensitive
-    // FOR WORDS THAT HAVE SIMILARITIES
     const regex = new RegExp(nameToSearch, "i");
     const contacts = await Contact.find({ name: regex });
     return contacts;
   } catch (err) {
-    console.error(err);
+    throw new Error("Failed to search contacts");
   }
 };
 
 const findByName = async (nameToSearch) => {
   try {
-    // find contact case-insensitive
-    // FOR SPESIFIC STRING
     const regex = new RegExp(`\\b${nameToSearch}\\b`, "i");
     const contacts = await Contact.find({ name: regex });
     return contacts;
   } catch (err) {
-    console.error(err);
+    throw new Error("Failed to find contact");
   }
 };
 
-app.get("/", async (req, res) => {
-  let contacts = await sortByName();
-  const searchResults = req.flash("searchResults");
-  if (searchResults.length > 0) {
-    contacts = JSON.parse(searchResults[0]);
+// Routes
+app.get("/", async (req, res, next) => {
+  try {
+    let contacts = await sortByName();
+    const searchResults = req.flash("searchResults");
+    if (searchResults.length > 0) {
+      contacts = JSON.parse(searchResults[0]);
+    }
+    const allNotFavourite = contacts.every((contact) => !contact.isFavourite);
+    res.render("index", {
+      title: "Contact Page",
+      contacts,
+      allNotFavourite,
+      searchResults,
+      msg: req.flash("msg"),
+      layout: "layouts/mainlayouts.ejs",
+    });
+  } catch (err) {
+    next(err);
   }
-  const allNotFavourite = contacts.every((contact) => !contact.isFavourite);
-  res.render("index", {
-    title: "Contact Page",
-    contacts,
-    allNotFavourite,
-    searchResults,
-    msg: req.flash("msg"),
-    layout: "layouts/mainlayouts.ejs",
-  });
 });
 
 app.get("/add", (req, res) => {
@@ -138,202 +130,174 @@ app.get("/add", (req, res) => {
   });
 });
 
-app.post("/search", async (req, res) => {
-  // MANUAL VALIDATOR
+app.post("/search", async (req, res, next) => {
   const inputName = req.body.search;
-  let contacts = await searchByName(inputName);
-  console.log(contacts);
-  const errors = [];
-  if (contacts == undefined) {
-    errors.push({ msg: `${inputName} not found!` });
+  try {
+    let contacts = await searchByName(inputName);
+    if (!contacts) {
+      contacts = await sortByName();
+      req.flash("msg", `${inputName} not found!`);
+    }
+    req.flash("searchResults", JSON.stringify(contacts));
+    res.redirect("/");
+  } catch (err) {
+    next(err);
   }
-  if (inputName === "") {
-    contacts = await sortByName();
-  }
-
-  // Jika terdapat error, render kembali halaman dengan pesan kesalahan
-  if (errors.length > 0) {
-    return res.render("index", {
-      title: "Contact Page",
-      layout: "layouts/mainlayouts.ejs",
-      errors: errors,
-    });
-  }
-
-  req.flash("searchResults", JSON.stringify(contacts));
-
-  res.redirect("/");
 });
 
 // add to favourite feature
-app.post("/favourite/:name", async (req, res) => {
-  // MANUAL VALIDATOR
+app.post("/favourite/:name", async (req, res, next) => {
   const inputName = req.params.name;
   const isFavourite = req.body.isFavourite === "on";
-  let contacts = await findByName(inputName);
-  console.log(contacts);
-  const errors = [];
-  if (contacts == undefined) {
-    errors.push({ msg: `${inputName} not found!` });
+  try {
+    let contacts = await findByName(inputName);
+    if (!contacts.length) {
+      req.flash("msg", `${inputName} not found!`);
+      return res.redirect("/");
+    }
+    await Contact.updateOne({ name: inputName }, { isFavourite: isFavourite });
+    res.redirect("/");
+  } catch (err) {
+    next(err);
   }
-
-  // Jika terdapat error, render kembali halaman dengan pesan kesalahan
-  if (errors.length > 0) {
-    return res.render("index", {
-      title: "Contact Page",
-      layout: "layouts/mainlayouts.ejs",
-      errors: errors,
-    });
-  }
-
-  const filter = { name: contacts[0].name };
-
-  await Contact.updateOne(filter, { isFavourite: isFavourite });
-
-  res.redirect("/");
 });
 
-app.post("/", upload.single("img"), async (req, res) => {
-  // MANUAL VALIDATOR
+app.post("/", upload.single("img"), async (req, res, next) => {
   const inputName = req.body.name;
   const email = req.body.email;
   const num = req.body.num;
-  const findContact = await findByName(inputName);
+  try {
+    const findContact = await findByName(inputName);
+    const isDuplicated = findContact.length > 0;
+    const isEmail = validator.isEmail(email);
+    const isNum = validator.isMobilePhone(num);
+    const phoneNum = await convertPhoneNum(num);
 
-  const isDuplicated = findContact.length > 0;
-  const isEmail = validator.isEmail(email);
-  const isNum = validator.isMobilePhone(num);
-  const phoneNum = await convertPhoneNum(num);
+    const errors = [];
+    if (isDuplicated) errors.push({ msg: "Contact already exists" });
+    if (!isNum) errors.push({ msg: "Not a valid phone num" });
+    if (!isEmail) errors.push({ msg: "Not a valid e-mail address" });
 
-  const errors = [];
-  if (isDuplicated) {
-    errors.push({ msg: "Contact already exists" });
-  }
+    if (errors.length > 0) {
+      return res.render("add-contacts", {
+        title: "Add Contact Page",
+        layout: "layouts/mainlayouts.ejs",
+        errors: errors,
+      });
+    }
 
-  if (!isNum) {
-    errors.push({ msg: "Not a valid phone num" });
-  }
-
-  if (!isEmail) {
-    errors.push({ msg: "Not a valid e-mail address" });
-  }
-
-  // Jika terdapat error, render kembali halaman dengan pesan kesalahan
-  if (errors.length > 0) {
-    return res.render("add-contacts", {
-      title: "Add Contact Page",
-      layout: "layouts/mainlayouts.ejs",
-      errors: errors,
+    const imagePath = req.file ? req.file.filename : "Default.jpg";
+    const contact = new Contact({
+      ...req.body,
+      num: phoneNum,
+      img: "img/" + imagePath,
     });
+    await contact.save();
+    req.flash("msg", "Contact added successfully!");
+    res.redirect("/");
+  } catch (err) {
+    next(err);
   }
-
-  // After validation process
-  const imagePath = req.file ? req.file.filename : "Default.jpg";
-  const contact = new Contact({
-    ...req.body,
-    num: phoneNum,
-    img: "img/" + imagePath,
-  });
-  console.log(contact);
-  await contact.save();
-  // addContact(contact);
-  req.flash("msg", "Contact added successfully!");
-  res.redirect("/");
 });
 
-app.get("/:name", async (req, res) => {
+app.get("/:name", async (req, res, next) => {
   const nameParam = req.params.name;
-  const detail = await Contact.find({ name: nameParam });
-  console.log(detail);
-  if (detail.length === 0) {
-    res.status(404).send(`${nameParam} Not Found`);
+  try {
+    const detail = await Contact.find({ name: nameParam });
+    if (!detail.length) {
+      return res.status(404).send(`${nameParam} Not Found`);
+    }
+    res.render("detail", {
+      title: "Detail Page",
+      detail,
+      layout: "layouts/mainlayouts.ejs",
+    });
+  } catch (err) {
+    next(err);
   }
-  res.render("detail", {
-    title: "Detail Page",
-    detail,
-    layout: "layouts/mainlayouts.ejs",
-  });
 });
 
 // form update data
-app.get("/update/:name", async (req, res) => {
+app.get("/update/:name", async (req, res, next) => {
   const name = req.params.name;
-  const findContact = await Contact.find({ name: name });
-  if (findContact.length === 0) {
-    res.status(404).send(`${name} Not Found`);
+  try {
+    const findContact = await Contact.find({ name: name });
+    if (!findContact.length) {
+      return res.status(404).send(`${name} Not Found`);
+    }
+    res.render("update-contact", {
+      title: "Update Contact Page",
+      layout: "layouts/mainlayouts.ejs",
+      findContact,
+    });
+  } catch (err) {
+    next(err);
   }
-  res.render("update-contact", {
-    title: "Update Contact Page",
-    layout: "layouts/mainlayouts.ejs",
-    findContact,
-  });
 });
 
-app.post("/update", upload.single("img"), async (req, res) => {
-  // MANUAL VALIDATOR
+app.post("/update", upload.single("img"), async (req, res, next) => {
   const oldName = req.body.oldName;
   const name = req.body.name;
   const email = req.body.email;
   const num = req.body.num;
-  // const duplicated = isDuplicated(name);
-  const isEmail = validator.isEmail(email);
-  const isNum = validator.isMobilePhone(num);
-  const phoneNum = await convertPhoneNum(num);
+  try {
+    const isEmail = validator.isEmail(email);
+    const isNum = validator.isMobilePhone(num);
+    const phoneNum = await convertPhoneNum(num);
 
-  const findContact = await findByName(oldName);
-  const errors = [];
-  if (!findContact) {
-    errors.push({ msg: "Contact not found" });
-  } else if (oldName.toLowerCase() !== name.toLowerCase()) {
-    const duplicated = await findByName(name);
-    if (duplicated.length > 0) {
-      errors.push({ msg: "Contact already exists" });
+    const findContact = await findByName(oldName);
+    const errors = [];
+    if (!findContact.length) errors.push({ msg: "Contact not found" });
+    if (oldName.toLowerCase() !== name.toLowerCase()) {
+      const duplicated = await findByName(name);
+      if (duplicated.length > 0) errors.push({ msg: "Contact already exists" });
     }
+    if (!isNum) errors.push({ msg: "Not a valid Phone Num" });
+    if (!isEmail) errors.push({ msg: "Not a valid e-mail address" });
+
+    if (errors.length > 0) {
+      return res.render("update-contact", {
+        title: "Update Contact Page",
+        layout: "layouts/mainlayouts.ejs",
+        findContact,
+        errors: errors,
+      });
+    }
+
+    const imagePath = req.file ? "img/" + req.file.filename : findContact[0].img;
+    const contact = { ...req.body, num: phoneNum, img: imagePath };
+    await Contact.updateOne({ name: findContact[0].name }, contact);
+    req.flash("msg", "Contact updated successfully!");
+    res.redirect("/");
+  } catch (err) {
+    next(err);
   }
-
-  if (!isNum) {
-    errors.push({ msg: "Not a valid Phone Num" });
-  }
-  if (!isEmail) {
-    errors.push({ msg: "Not a valid e-mail address" });
-  }
-
-  // Jika terdapat error, render kembali halaman dengan pesan kesalahan
-  if (errors.length > 0) {
-    return res.render("update-contact", {
-      title: "Update Contact Page",
-      layout: "layouts/mainlayouts.ejs",
-      findContact,
-      errors: errors,
-    });
-  }
-
-  delete findContact.oldName;
-  // After validation process
-  const imagePath = req.file ? "img/" + req.file.filename : findContact[0].img;
-  const contact = { ...req.body, num: phoneNum, img: imagePath };
-  const filter = { name: findContact[0].name };
-
-  await Contact.updateOne(filter, contact);
-
-  req.flash("msg", "Contact updated successfully!");
-  res.redirect("/");
 });
 
-app.get("/delete/:name", async (req, res) => {
+app.get("/delete/:name", async (req, res, next) => {
   const name = req.params.name;
-  const findContact = await Contact.find({ name: name });
-  if (!findContact) {
-    res.status(404).send(`${name} Not Found`);
+  try {
+    const findContact = await Contact.find({ name: name });
+    if (!findContact.length) {
+      return res.status(404).send(`${name} Not Found`);
+    }
+    await Contact.deleteOne({ name: name });
+    req.flash("msg", "Deleted contact successfully!");
+    res.redirect("/");
+  } catch (err) {
+    next(err);
   }
-  await Contact.deleteOne({ name: findContact[0].name });
-  req.flash("msg", "Deleted contact successfully!");
-  res.redirect("/");
 });
 
-// for request anything
-app.use("/", (req, res) => {
+// 404 handler
+app.use((req, res) => {
   res.status(404).send("Not Found");
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
 });
 
 app.listen(port, () => {
